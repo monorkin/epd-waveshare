@@ -7,6 +7,8 @@
 use embedded_graphics_core::pixelcolor::BinaryColor;
 #[cfg(feature = "graphics")]
 use embedded_graphics_core::pixelcolor::PixelColor;
+#[cfg(feature = "graphics")]
+use embedded_graphics_core::pixelcolor::RgbColor;
 
 /// When trying to parse u8 to one of the color types
 #[derive(Debug, PartialEq, Eq)]
@@ -136,6 +138,128 @@ impl From<BinaryColor> for OctColor {
         match b {
             BinaryColor::On => OctColor::Black,
             BinaryColor::Off => OctColor::White,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb565> for TriColor {
+    fn from(color: embedded_graphics_core::pixelcolor::Rgb565) -> Self {
+        let r = color.r() as f32 / 255.0;
+        let g = color.g() as f32 / 255.0;
+        let b = color.b() as f32 / 255.0;
+
+        // Very rudimentary RGB to HSL conversion
+        let min = if r < g && r < b {
+            r
+        }
+        else if g < r && g < b {
+            g
+        }
+        else {
+            b
+        };
+
+        let max = if r > g && r > b {
+            r
+        }
+        else if g > r && g > b {
+            g
+        }
+        else {
+            b
+        };
+
+        let l = (min + max) / 2.0;
+        let s = if min == max {
+            0.0
+        }
+        else if r == g && g == b {
+            0.0
+        }
+        else if l >= 0.5 {
+            (max - min) / (max + min)
+        }
+        else {
+            (max - min) / (2.0 - max - min)
+        };
+
+        // Treat light grays and white as white
+        if s == 0.0 && l >= 0.5 {
+            TriColor::White
+        }
+        // Treat dark grays and black as black
+        else if s == 0.0 && l < 0.5 {
+            TriColor::Black
+        }
+        // Treat very dark colors as black
+        else if l < 0.25 {
+            TriColor::Black
+        }
+        // If it isn't black, white or gray, and it isn't a dim color then it's chromatic
+        else {
+            TriColor::Chromatic
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb555> for TriColor {
+    fn from(color: embedded_graphics_core::pixelcolor::Rgb555) -> Self {
+        let r = color.r() as f32 / 255.0;
+        let g = color.g() as f32 / 255.0;
+        let b = color.b() as f32 / 255.0;
+
+        // Very rudimentary RGB to HSL conversion
+        let min = if r < g && r < b {
+            r
+        }
+        else if g < r && g < b {
+            g
+        }
+        else {
+            b
+        };
+
+        let max = if r > g && r > b {
+            r
+        }
+        else if g > r && g > b {
+            g
+        }
+        else {
+            b
+        };
+
+        let l = (min + max) / 2.0;
+        let s = if min == max {
+            0.0
+        }
+        else if r == g && g == b {
+            0.0
+        }
+        else if l >= 0.5 {
+            (max - min) / (max + min)
+        }
+        else {
+            (max - min) / (2.0 - max - min)
+        };
+
+        // Treat light grays and white as white
+        if s == 0.0 && l >= 0.5 {
+            TriColor::White
+        }
+        // Treat dark grays and black as black
+        else if s == 0.0 && l < 0.5 {
+            TriColor::Black
+        }
+        // Treat very dark colors as black
+        else if l < 0.25 {
+            TriColor::Black
+        }
+        // If it isn't black, white or gray, and it isn't a dim color then it's chromatic
+        else {
+            TriColor::Chromatic
         }
     }
 }
